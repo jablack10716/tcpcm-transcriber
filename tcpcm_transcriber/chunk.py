@@ -78,12 +78,14 @@ class TextChunker:
                 break
             
             # Find segments that contributed to this chunk
-            chunk_segments = set()
+            # Use dict to track unique segments by id
+            chunk_segments_dict = {}
             for i in range(start_char, min(end_char, len(char_to_segment))):
                 if i < len(char_to_segment):
-                    chunk_segments.add(char_to_segment[i])
+                    seg = char_to_segment[i]
+                    chunk_segments_dict[seg.id] = seg
             
-            chunk_segments = sorted(chunk_segments, key=lambda s: s.id)
+            chunk_segments = sorted(chunk_segments_dict.values(), key=lambda s: s.id)
             
             if chunk_segments:
                 # Get timestamps from first and last segment in chunk
