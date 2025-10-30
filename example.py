@@ -3,6 +3,7 @@
 Example script showing how to use tcpcm_transcriber programmatically.
 """
 
+from pathlib import Path
 from tcpcm_transcriber.schemas import Segment, Transcript
 from tcpcm_transcriber.normalize import TextNormalizer
 from tcpcm_transcriber.chunk import TextChunker
@@ -44,7 +45,9 @@ def main():
               f"{chunk.start:.1f}s - {chunk.end:.1f}s")
     
     # Export all formats
-    outputs = export_all(transcript, chunks, "data/output", "example")
+    output_dir = Path(__file__).parent / "data" / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    outputs = export_all(transcript, chunks, str(output_dir), "example")
     
     print("\nExported files:")
     for fmt, path in outputs.items():
