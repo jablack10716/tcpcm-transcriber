@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tcpcm-transcriber"
+version = "0.1.0"
+description = "CLI tool for transcribing TcPCM training videos"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "TcPCM Team"}
+]
+dependencies = [
+    "faster-whisper>=1.0",
+    "click>=8.1",
+    "ffmpeg-python>=0.2.0",
+    "pydantic>=2.5",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+tcpcm = "tcpcm_transcriber.cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tcpcm_transcriber*"]
+
+[tool.setuptools.package-data]
+tcpcm_transcriber = ["glossary_default.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
