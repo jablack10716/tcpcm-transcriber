@@ -14,7 +14,7 @@ from .asr import ASREngine
 from .media import validate_media_file, probe_media
 from .normalize import TextNormalizer
 from .chunk import TextChunker
-from .export import export_all
+from .export import export_all, export_formats
 
 # Setup logging with rich
 logging.basicConfig(
@@ -70,6 +70,9 @@ def cli():
 @click.option('--language', 
               type=str,
               help='Language code (e.g., "en"). Auto-detect if not specified.')
+@click.option('--format', 'formats', multiple=True,
+              type=click.Choice(['srt', 'vtt', 'json', 'jsonl', 'all'], case_sensitive=False),
+              help='Select one or more export formats. Use multiple --format flags. If omitted or if "all" is included, exports all formats.')
 def transcribe(
     input_file: str,
     output_dir: str,
@@ -81,7 +84,8 @@ def transcribe(
     glossary: Optional[str],
     target_chars: int,
     overlap_chars: int,
-    language: Optional[str]
+    language: Optional[str],
+    formats: tuple[str, ...] | None
 ):
     """Transcribe a single video or audio file."""
     
@@ -114,9 +118,39 @@ def transcribe(
                 vad_filter=vad
             )
         
-        # Transcribe
-        console.print("Transcribing... (this may take a while)")
-        transcript = asr.transcribe(input_file, language=language)
+        # Transcribe with progress bar
+        total_duration = media_info.get('duration') if media_info else None
+        
+        if total_duration:
+            from rich.progress import BarColumn, TimeRemainingColumn
+            with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TextColumn("•"),
+                TextColumn("{task.fields[segments]} segments"),
+                TimeRemainingColumn(),
+                console=console
+            ) as progress:
+                task = progress.add_task(
+                    "Transcribing...", 
+                    total=total_duration,
+                    segments=0
+                )
+                
+                def update_progress(current_time: float, segment_count: int):
+                    progress.update(task, completed=min(current_time, total_duration), segments=segment_count)
+                
+                transcript = asr.transcribe(
+                    input_file, 
+                    language=language,
+                    progress_callback=update_progress,
+                    total_duration=total_duration
+                )
+        else:
+            console.print("Transcribing... (this may take a while)")
+            transcript = asr.transcribe(input_file, language=language)
+        
         console.print(f"[green]✓[/green] Transcribed {len(transcript.segments)} segments")
         
         # Normalize text if requested
@@ -142,8 +176,12 @@ def transcribe(
         if match:
             safe_stem = f"tcpcm_ch{match.group(1).zfill(2)}"
         
-        # Export all formats
-        outputs = export_all(transcript, chunks, output_dir, safe_stem)
+        # Export selected formats (default: all)
+        selected = set((f.lower() for f in (formats or ())))
+        if not selected or 'all' in selected:
+            outputs = export_all(transcript, chunks, output_dir, safe_stem)
+        else:
+            outputs = export_formats(transcript, chunks, output_dir, safe_stem, selected)
         
         console.print(f"\n[bold green]Transcription complete![/bold green]")
         console.print(f"Output directory: {output_dir}")

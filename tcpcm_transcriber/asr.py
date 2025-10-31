@@ -1,7 +1,7 @@
 """ASR (Automatic Speech Recognition) module using faster-whisper."""
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Callable
 from faster_whisper import WhisperModel
 from .schemas import Segment, Transcript
 
@@ -66,13 +66,21 @@ class ASREngine:
             compute_type=compute_type
         )
     
-    def transcribe(self, audio_path: str, language: Optional[str] = None) -> Transcript:
+    def transcribe(
+        self, 
+        audio_path: str, 
+        language: Optional[str] = None,
+        progress_callback: Optional[Callable[[float, int], None]] = None,
+        total_duration: Optional[float] = None
+    ) -> Transcript:
         """
         Transcribe an audio/video file.
         
         Args:
             audio_path: Path to audio or video file
             language: Language code (e.g., 'en'). Auto-detect if None.
+            progress_callback: Optional callback function(current_time, segment_count)
+            total_duration: Total duration in seconds (for progress estimation)
         
         Returns:
             Transcript object with segments
@@ -88,12 +96,17 @@ class ASREngine:
         
         segments = []
         for i, segment in enumerate(segments_iter):
-            segments.append(Segment(
+            seg = Segment(
                 id=i,
                 start=segment.start,
                 end=segment.end,
                 text=segment.text.strip()
-            ))
+            )
+            segments.append(seg)
+            
+            # Call progress callback if provided
+            if progress_callback:
+                progress_callback(seg.end, len(segments))
         
         # Calculate total duration from last segment
         duration = segments[-1].end if segments else 0.0

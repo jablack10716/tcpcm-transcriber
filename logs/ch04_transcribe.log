@@ -1,0 +1,26 @@
+TcPCM Transcriber
+Input: data/input/Ch 04 Parametric Calculation with NX Feature 2 Cost.mp4
+[10/31/25 19:34:49] INFO     Media file validated: data/input/Ch 04  media.py:77
+                             Parametric Calculation with NX Feature             
+                             2 Cost.mp4 (191386173 bytes)                       
+[10/31/25 19:34:50] INFO     Media probe: {'format':                 media.py:42
+                             'mov,mp4,m4a,3gp,3g2,mj2', 'duration':             
+                             5170.9445, 'has_audio': True,                      
+                             'has_video': True, 'audio_streams': 1,             
+                             'video_streams': 1, 'audio_codec':                 
+                             'aac', 'sample_rate': '16000'}                     
+Duration: 5170.9445s
+                    INFO     No GPU detected, using CPU with int8      asr.py:26
+                    INFO     Loading Whisper model: tiny on cpu with   asr.py:62
+                             int8                                               
+[10/31/25 19:34:51] INFO     HTTP Request: GET                   _client.py:1025
+                             https://huggingface.co/api/models/S                
+                             ystran/faster-whisper-tiny/revision                
+                             /main "HTTP/1.1 200 OK"                            
+⠙ Loading Whisper model...
+                    INFO     Transcribing: data/input/Ch 04 Parametric asr.py:88
+                             Calculation with NX Feature 2 Cost.mp4             
+[10/31/25 19:34:54] INFO     Processing audio with duration    transcribe.py:855
+                             01:26:10.944                                       
+[10/31/25 19:35:20] INFO     VAD filter removed 34:05.472 of   transcribe.py:869
+                             audio                                              

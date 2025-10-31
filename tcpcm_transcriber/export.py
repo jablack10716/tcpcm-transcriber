@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Iterable, Dict
 from .schemas import Segment, Transcript, Chunk
 
 logger = logging.getLogger(__name__)
@@ -166,4 +166,55 @@ def export_all(
     outputs['jsonl'] = str(jsonl_path)
     
     logger.info(f"Exported all formats to: {output_dir}")
+    return outputs
+
+
+def export_formats(
+    transcript: Transcript,
+    chunks: List[Chunk],
+    output_dir: str,
+    base_name: str,
+    formats: Iterable[str]
+) -> Dict[str, str]:
+    """
+    Export transcript in selected formats.
+
+    Args:
+        transcript: Transcript object
+        chunks: List of chunks
+        output_dir: Output directory
+        base_name: Base name for output files (without extension)
+        formats: Iterable of format strings among {"srt","vtt","json","jsonl"}
+
+    Returns:
+        Dictionary mapping format to output path
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    outputs: Dict[str, str] = {}
+
+    fmt_set = {f.lower() for f in formats}
+
+    if "srt" in fmt_set:
+        srt_path = output_path / f"{base_name}.srt"
+        export_srt(transcript.segments, str(srt_path))
+        outputs["srt"] = str(srt_path)
+
+    if "vtt" in fmt_set:
+        vtt_path = output_path / f"{base_name}.vtt"
+        export_vtt(transcript.segments, str(vtt_path))
+        outputs["vtt"] = str(vtt_path)
+
+    if "json" in fmt_set:
+        json_path = output_path / f"{base_name}.json"
+        export_json(transcript, str(json_path))
+        outputs["json"] = str(json_path)
+
+    if "jsonl" in fmt_set:
+        jsonl_path = output_path / f"{base_name}_chunks.jsonl"
+        export_jsonl(chunks, str(jsonl_path))
+        outputs["jsonl"] = str(jsonl_path)
+
+    logger.info(f"Exported selected formats ({', '.join(sorted(fmt_set))}) to: {output_dir}")
     return outputs
